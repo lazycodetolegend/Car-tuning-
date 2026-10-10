@@ -81,7 +81,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Serve public static assets if present
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // 4. Mount API Routes
 const authRoutes = require('./routes/auth');
