@@ -3,7 +3,7 @@ process.env.JWT_SECRET = 'test_jwt_secret_key_for_antigravity_testing_only_12345
 process.env.JWT_EXPIRES_IN = '1d';
 process.env.CLOUDINARY_CLOUD_NAME = 'test-cloud';
 process.env.CLOUDINARY_API_KEY = '123456789012345';
-process.env.CLOUDINARY_API_SECRET = 'abcdefghijklmnopqrstuvwxyz1';
+process.env.CLOUDINARY_SECRET = 'test_secret_mock_12345';
 process.env.CORS_ORIGIN = '*';
 process.env.MONGODB_URI = 'mongodb://127.0.0.1:27017/test_placeholder';
 
