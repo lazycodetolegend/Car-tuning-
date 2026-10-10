@@ -1,5 +1,5 @@
-// Brand Selection JavaScript (using simple auth)
-// Functions are now available globally from simple-auth-no-firebase.js
+// Brand Selection JavaScript
+// Functions are available globally from api.js
 
 // Global variables
 let currentUser = null;

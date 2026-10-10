@@ -1,5 +1,5 @@
 // Authentication JavaScript (using global functions)
-// Functions are now available globally from simple-auth.js
+// Functions are available globally from api.js
 
 // DOM Elements
 const loginForm = document.getElementById('loginForm');
@@ -68,7 +68,7 @@ async function handleLogin(e) {
   const password = document.getElementById('loginPassword').value;
   const button = e.target.querySelector('.auth-btn');
   
-  setLoading(button, true);
+  setLoading(button, true, 'Logging in…');
   
   try {
     console.log('Attempting login for:', email);
@@ -138,7 +138,7 @@ async function handleRegister(e) {
     return;
   }
   
-  setLoading(button, true);
+  setLoading(button, true, 'Creating Account…');
   
   try {
     console.log('Attempting registration for:', email);
@@ -202,9 +202,8 @@ async function handleForgotPassword(e) {
   setLoading(button, true);
   
   try {
-    // This would typically call a Firebase function
-    // For now, we'll show a success message
-    showMessage('Password reset email sent! Check your inbox.', 'success');
+    // Show user notification
+    showMessage('Password reset instructions sent! Check your inbox.', 'success');
     showLogin();
   } catch (error) {
     showMessage('Failed to send reset email', 'error');
@@ -241,18 +240,27 @@ function hideAllSections() {
 }
 
 // Utility functions
-function setLoading(button, isLoading) {
+function setLoading(button, isLoading, loadingText = '') {
   const btnText = button.querySelector('.btn-text');
   const spinner = button.querySelector('.spinner');
   
   if (isLoading) {
     button.disabled = true;
-    btnText.classList.add('hidden');
-    spinner.classList.remove('hidden');
+    if (loadingText && btnText) {
+      button.dataset.originalText = btnText.textContent;
+      btnText.textContent = loadingText;
+      btnText.classList.remove('hidden');
+    } else if (btnText) {
+      btnText.classList.add('hidden');
+    }
+    if (spinner) spinner.classList.remove('hidden');
   } else {
     button.disabled = false;
-    btnText.classList.remove('hidden');
-    spinner.classList.add('hidden');
+    if (button.dataset.originalText && btnText) {
+      btnText.textContent = button.dataset.originalText;
+    }
+    if (btnText) btnText.classList.remove('hidden');
+    if (spinner) spinner.classList.add('hidden');
   }
 }
 

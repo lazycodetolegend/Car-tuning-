@@ -1,294 +1,131 @@
-# Car Tuning Web Application - Backend API
+# Car Tuning REST API Backend
 
-A comprehensive backend API for a car tuning web application with 3D model support, user authentication, and advanced customization features.
+Production-ready backend for the Car Tuning 3D Configurator, built with **Node.js 20, Express, Mongoose (MongoDB Atlas), and Cloudinary**.
 
-## Features
+---
 
-- **User Authentication & Authorization**
-  - JWT-based authentication
-  - Email verification
-  - Password reset functionality
-  - Role-based access control (User, Admin, Moderator)
-  - Social login support (Google, Microsoft)
+## 🚀 Features
 
-- **Car Management**
-  - CRUD operations for cars
-  - Advanced search and filtering
-  - Car specifications and 3D models
-  - Rim and tuning parts management
-  - Car categories and brands
+- **MongoDB Atlas Integration**: Scalable document storage with Mongoose models (`User`, `Car`, `Build`, `Project`).
+- **Cloudinary Image Processing**: Direct memory uploads with Sharp optimization (resized to max 1600px, converted to WebP at quality 82).
+- **JWT Bearer Authentication**: Bcrypt password hashing (cost factor 12) and secure JSON Web Tokens.
+- **Strict Data Ownership**: Rigorous authorization checks ensuring users can only read and manage their own builds and uploads.
+- **Hardened Security**: Helmet HTTP headers, CORS allowlist, Express rate limiting (10 requests / 15 min for auth, 100 / 15 min general), input validation and regex escaping with express-validator.
+- **Fail-Fast Configuration**: Fails on startup if any critical environment variable is absent.
+- **Zero Firebase Dependency**: Fully independent REST API replacing all legacy Firebase/Firestore code.
 
-- **Tuning System**
-  - Paint customization (colors, finishes, materials)
-  - Performance modifications (engine, exhaust, suspension, brakes)
-  - Exterior modifications (body kits, spoilers, lights)
-  - Interior modifications (seats, steering wheel, dashboard)
-  - Performance statistics calculation
+---
 
-- **File Upload System**
-  - Image uploads (avatars, car images, tuning photos)
-  - 3D model uploads (GLB, GLTF, FBX, OBJ)
-  - Cloudinary integration for cloud storage
-  - File validation and size limits
+## 📋 Environment Variables
 
-- **Social Features**
-  - Like/unlike tunings
-  - Comments system
-  - Share tunings
-  - User profiles and statistics
-  - Activity feeds
+Create a `.env` file in the `backend/` directory based on `.env.example`:
 
-- **Real-time Features**
-  - Socket.io integration
-  - Live tuning updates
-  - Real-time notifications
+| Variable | Description | Example |
+|---|---|---|
+| `PORT` | Local server port | `5000` |
+| `NODE_ENV` | Runtime environment (`development` / `production` / `test`) | `development` |
+| `MONGODB_URI` | MongoDB Atlas connection string | `mongodb://user:pass@cluster.mongodb.net/car-tuning-app?retryWrites=true&w=majority` |
+| `JWT_SECRET` | Secret key for signing JWT tokens (min 32 characters) | `random_long_secret_hash_value` |
+| `JWT_EXPIRES_IN` | Token expiration duration | `7d` |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary account cloud name | `your-cloud-name` |
+| `CLOUDINARY_API_KEY` | Cloudinary API Key | `123456789012345` |
+| `CLOUDINARY_SECRET` | Cloudinary Secret (API Secret) | `your-secret-key` |
+| `CORS_ORIGIN` | Comma-separated list of allowed origins | `https://your-app.vercel.app,http://localhost:5000` |
 
-## Tech Stack
+> ⚠️ **Security Warning**: Never commit `.env` or paste real credentials into git. All `.env` files are ignored by git.
 
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: MongoDB with Mongoose
-- **Authentication**: JWT (JSON Web Tokens)
-- **File Storage**: Cloudinary
-- **Real-time**: Socket.io
-- **Validation**: Express-validator
-- **Security**: Helmet, CORS, Rate limiting
+---
 
-## Installation
+## 🛠️ Local Development & Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd tuning-web/backend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Environment Setup**
-   ```bash
-   cp config.env.example .env
-   ```
-   
-   Fill in the required environment variables in `.env`:
-   ```env
-   # Server Configuration
-   PORT=5000
-   NODE_ENV=development
-   
-   # Database
-   MONGODB_URI=mongodb://localhost:27017/car-tuning-app
-   
-   # JWT
-   JWT_SECRET=your-super-secret-jwt-key
-   JWT_EXPIRE=7d
-   
-   # Cloudinary
-   CLOUDINARY_CLOUD_NAME=your-cloud-name
-   CLOUDINARY_API_KEY=your-api-key
-   CLOUDINARY_API_SECRET=your-api-secret
-   
-   # Email
-   EMAIL_HOST=smtp.gmail.com
-   EMAIL_PORT=587
-   EMAIL_USER=your-email@gmail.com
-   EMAIL_PASS=your-app-password
-   ```
-
-4. **Start the server**
-   ```bash
-   # Development
-   npm run dev
-   
-   # Production
-   npm start
-   ```
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/logout` - Logout user
-- `GET /api/auth/me` - Get current user
-- `PUT /api/auth/updatedetails` - Update user details
-- `PUT /api/auth/updatepassword` - Update password
-- `POST /api/auth/forgotpassword` - Forgot password
-- `PUT /api/auth/resetpassword/:token` - Reset password
-- `GET /api/auth/verify-email/:token` - Verify email
-- `POST /api/auth/resend-verification` - Resend verification
-
-### Users
-- `GET /api/users` - Get all users (Admin)
-- `GET /api/users/:id` - Get user by ID
-- `PUT /api/users/:id` - Update user profile
-- `DELETE /api/users/:id` - Delete user (Admin)
-- `GET /api/users/:id/tunings` - Get user's tunings
-- `GET /api/users/:id/projects` - Get user's projects
-- `GET /api/users/:id/likes` - Get user's liked tunings
-- `GET /api/users/:id/stats` - Get user statistics
-- `GET /api/users/:id/activity` - Get user activity feed
-
-### Cars
-- `GET /api/cars` - Get all cars
-- `GET /api/cars/featured` - Get featured cars
-- `GET /api/cars/:id` - Get car by ID
-- `POST /api/cars` - Create car (Admin)
-- `PUT /api/cars/:id` - Update car (Admin)
-- `DELETE /api/cars/:id` - Delete car (Admin)
-- `GET /api/cars/meta/categories` - Get car categories
-- `GET /api/cars/meta/brands` - Get car brands
-- `GET /api/cars/meta/years` - Get car years
-- `GET /api/cars/meta/tags` - Get car tags
-- `GET /api/cars/:id/similar` - Get similar cars
-- `GET /api/cars/:id/parts` - Get car tuning parts
-- `GET /api/cars/:id/rims` - Get car rims
-
-### Tuning
-- `GET /api/tuning` - Get all tunings
-- `GET /api/tuning/featured` - Get featured tunings
-- `GET /api/tuning/templates` - Get tuning templates
-- `GET /api/tuning/:id` - Get tuning by ID
-- `POST /api/tuning` - Create tuning
-- `PUT /api/tuning/:id` - Update tuning
-- `DELETE /api/tuning/:id` - Delete tuning
-- `POST /api/tuning/:id/like` - Like/unlike tuning
-- `POST /api/tuning/:id/comments` - Add comment
-- `GET /api/tuning/:id/comments` - Get comments
-- `POST /api/tuning/:id/share` - Share tuning
-- `GET /api/tuning/:id/similar` - Get similar tunings
-- `POST /api/tuning/:id/clone` - Clone tuning
-- `GET /api/tuning/stats/overview` - Get tuning statistics
-
-### File Upload
-- `POST /api/upload/avatar` - Upload avatar
-- `POST /api/upload/car-images` - Upload car images (Admin)
-- `POST /api/upload/car-model` - Upload car 3D model (Admin)
-- `POST /api/upload/rim-model` - Upload rim model (Admin)
-- `POST /api/upload/tuning-images` - Upload tuning images
-- `POST /api/upload/multiple` - Upload multiple files
-- `DELETE /api/upload/:publicId` - Delete file
-- `GET /api/upload/stats` - Get upload statistics (Admin)
-
-## Database Models
-
-### User
-- Personal information (name, email, username)
-- Authentication data (password, tokens)
-- Preferences and settings
-- Social accounts integration
-- Role-based permissions
-
-### Car
-- Basic information (name, brand, model, year)
-- Specifications (engine, performance, dimensions)
-- 3D model data and materials
-- Images and media
-- Tuning parts and rims
-- Categories and tags
-
-### Tuning
-- User and car references
-- Customization data (paint, performance, exterior, interior)
-- Performance statistics
-- Social features (likes, comments, shares)
-- Images and media
-- Public/private settings
-
-### Project
-- User reference
-- Collection of tunings
-- Project metadata
-- Social features
-
-## Security Features
-
-- **Authentication**: JWT tokens with refresh mechanism
-- **Authorization**: Role-based access control
-- **Rate Limiting**: API request rate limiting
-- **Input Validation**: Comprehensive input validation
-- **File Upload Security**: File type and size validation
-- **CORS**: Cross-origin resource sharing configuration
-- **Helmet**: Security headers
-- **Password Security**: Bcrypt hashing with salt rounds
-
-## Error Handling
-
-- Centralized error handling middleware
-- Custom error classes
-- Detailed error logging
-- User-friendly error messages
-- Development vs production error responses
-
-## Testing
-
+### 1. Install Dependencies
 ```bash
-# Run tests
+cd backend
+npm install
+```
+
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env` and fill in your MongoDB Atlas and Cloudinary credentials:
+```bash
+cp .env.example .env
+```
+
+### 3. Seed Database
+Seed all 18 car models and specifications into MongoDB Atlas:
+```bash
+npm run seed
+```
+
+### 4. Start Development Server
+```bash
+npm run dev
+# Or for standard start:
+npm start
+```
+
+### 5. Run Automated Tests
+```bash
 npm test
-
-# Run tests with coverage
-npm run test:coverage
 ```
 
-## Deployment
+---
 
-### Environment Variables for Production
-```env
-NODE_ENV=production
-PORT=5000
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/car-tuning-app
-JWT_SECRET=your-production-jwt-secret
-CLOUDINARY_CLOUD_NAME=your-production-cloud-name
-CLOUDINARY_API_KEY=your-production-api-key
-CLOUDINARY_API_SECRET=your-production-api-secret
-```
+## 📡 API Reference
 
-### Docker Deployment
-```bash
-# Build Docker image
-docker build -t car-tuning-backend .
+Base URL: `/api`
 
-# Run container
-docker run -p 5000:5000 --env-file .env car-tuning-backend
-```
+### 1. Health Check
+- `GET /api/health` — Public uptime monitor endpoint. Returns `{ status: 'ok', db: 'connected' }`.
 
-## API Documentation
+### 2. Authentication (`/api/auth`)
+- `POST /api/auth/register` — Create account. Body: `{ email, password, username, firstName?, lastName? }`. Returns `201 { token, user }`.
+- `POST /api/auth/login` — Sign in. Body: `{ email, password }`. Returns `200 { token, user }`. (Generic error for invalid credentials).
+- `GET /api/auth/me` — Authenticated profile. Header: `Authorization: Bearer <token>`.
+- `PATCH /api/auth/me` — Update profile. Body: `{ firstName?, lastName?, avatarUrl? }`.
 
-The API follows RESTful conventions and returns JSON responses. All responses include a `success` boolean field and appropriate HTTP status codes.
+### 3. Cars Catalog (`/api/cars`)
+- `GET /api/cars` — List active cars. Query filters: `?brand=`, `?year=`, `?search=`, `?page=`, `?limit=`.
+- `GET /api/cars/:idOrSlug` — Get single car by ID or slug. Automatically increments popularity counter.
+- `GET /api/cars/:id/similar` — Get up to 6 same-brand cars.
+- `POST /api/cars` — Admin only. Create car.
+- `PATCH /api/cars/:id` — Admin only. Update car.
+- `DELETE /api/cars/:id` — Admin only. Soft delete (`isActive = false`).
 
-### Response Format
-```json
-{
-  "success": true,
-  "message": "Operation successful",
-  "data": { ... },
-  "pagination": { ... }
-}
-```
+### 4. Custom Builds (`/api/builds`)
+- `POST /api/builds` — Private. Save custom tuning build. Body: `{ car, name, paintColors, selectedRim, extras, isPublic }`. Returns `201`.
+- `GET /api/builds/mine` — Private. Get caller's saved builds, newest first.
+- `GET /api/builds/:id` — Private. Get single build (owner only; returns `404` if not found or belongs to another user).
+- `PATCH /api/builds/:id` — Private. Update build (owner only).
+- `DELETE /api/builds/:id` — Private. Delete build (owner only).
+- `GET /api/builds/public/:shareSlug` — Public. View shared build where `isPublic === true`.
 
-### Error Format
-```json
-{
-  "success": false,
-  "message": "Error description",
-  "errors": [ ... ]
-}
-```
+### 5. Uploads (`/api/uploads`)
+- `POST /api/uploads/image` — Private. `multipart/form-data` with field `image` (JPEG/PNG/WebP, max 5MB). Processed with Sharp and stored in Cloudinary. Returns `{ secure_url, public_id }`.
+- `DELETE /api/uploads/:publicId` — Private. Delete Cloudinary asset with caller ownership verification.
 
-## Contributing
+---
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
+## 🚢 Render Deployment Guide
 
-## License
-
-MIT License - see LICENSE file for details
-
-## Support
-
-For support and questions, please contact the development team or create an issue in the repository.
+1. In the **Render Dashboard**, click **New +** → **Web Service**.
+2. Connect your GitHub repository.
+3. Set the following settings:
+   - **Root Directory**: `backend`
+   - **Environment**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Health Check Path**: `/api/health`
+4. Add the required Environment Variables in the Render settings:
+   - `MONGODB_URI`
+   - `JWT_SECRET`
+   - `JWT_EXPIRES_IN` (`7d`)
+   - `CLOUDINARY_CLOUD_NAME`
+   - `CLOUDINARY_API_KEY`
+   - `CLOUDINARY_SECRET` (Cloudinary API Secret key)
+   - `CORS_ORIGIN` (`https://<your-vercel-site>.vercel.app,http://localhost:5000`)
+5. Click **Deploy Web Service**.
+6. Once deployed, run the seed script from Render Shell or locally pointing `MONGODB_URI` to Atlas:
+   ```bash
+   npm run seed
+   ```
+7. Set up an uptime monitor targeting `https://<render-service-name>.onrender.com/api/health` every 10 minutes to prevent Render free-tier cold starts.

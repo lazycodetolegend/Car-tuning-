@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Saved Builds - Car Tuning Garage</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
+  <link rel="stylesheet" href="css/responsive.css"/>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #141416 0%, #1f1f24 100%);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(12px);
+      padding: 2.5rem 1.5rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: center;
+      position: relative;
+    }
+
+    .nav-links {
+      position: absolute;
+      top: 1.5rem;
+      left: 1.5rem;
+      display: flex;
+      gap: 1rem;
+    }
+
+    .nav-btn {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #fff;
+    }
+
+    .header h1 {
+      font-size: 2.8rem;
+      margin: 0 0 0.5rem;
+      background: linear-gradient(45deg, #ff8c00, #ff5500, #ffae19);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      font-size: 1.15rem;
+      opacity: 0.8;
+      margin: 0;
+    }
+
+    .user-tag {
+      margin-top: 10px;
+      display: inline-block;
+      background: rgba(78, 205, 196, 0.15);
+      border: 1px solid #4ecdc4;
+      color: #4ecdc4;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+      flex: 1;
+      width: 100%;
+    }
+
+    .builds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 2rem;
+    }
+
+    .build-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+    }
+
+    .build-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 35px rgba(255, 140, 0, 0.2);
+      border-color: rgba(255, 140, 0, 0.4);
+    }
+
+    .build-img-box {
+      width: 100%;
+      height: 190px;
+      background: radial-gradient(circle at 50% 50%, #292930 0%, #131317 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .build-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .build-placeholder-icon {
+      font-size: 4rem;
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    .build-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 140, 0, 0.4);
+      color: #ff8c00;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .build-content {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .build-car-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #ff8c00;
+      margin-bottom: 4px;
+    }
+
+    .build-name {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin: 0 0 12px;
+      color: #fff;
+    }
+
+    .build-specs {
+      font-size: 0.88rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .color-swatch-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      display: inline-block;
+    }
+
+    .card-actions {
+      margin-top: auto;
+      display: flex;
+      gap: 10px;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-tune {
+      background: linear-gradient(45deg, #ff8c00, #ff5500);
+      color: white;
+    }
+
+    .btn-tune:hover {
+      opacity: 0.9;
+    }
+
+    .btn-share {
+      background: rgba(78, 205, 196, 0.2);
+      border: 1px solid #4ecdc4;
+      color: #4ecdc4;
+    }
+
+    .btn-share:hover {
+      background: rgba(78, 205, 196, 0.35);
+    }
+
+    .btn-delete {
+      background: rgba(231, 76, 60, 0.2);
+      border: 1px solid #e74c3c;
+      color: #e74c3c;
+      flex: 0 0 38px;
+    }
+
+    .btn-delete:hover {
+      background: rgba(231, 76, 60, 0.4);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      max-width: 600px;
+      margin: 2rem auto;
+    }
+
+    .empty-state i {
+      font-size: 3.5rem;
+      color: rgba(255, 140, 0, 0.5);
+      margin-bottom: 1.2rem;
+    }
+
+    .empty-state h2 {
+      margin: 0 0 0.8rem;
+    }
+
+    .empty-state p {
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Modal for Public Build View */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1.5rem;
+    }
+
+    .modal-box {
+      background: #1e1e24;
+      border: 1px solid rgba(255, 140, 0, 0.4);
+      border-radius: 16px;
+      max-width: 550px;
+      width: 100%;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .close-modal-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1.2rem;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <nav class="nav-links">
+      <a href="homepage.html" class="nav-btn"><i class="fas fa-home"></i> Home</a>
+      <a href="car_selection.html" class="nav-btn"><i class="fas fa-car"></i> Cars</a>
+      <a href="tuning page.html" class="nav-btn"><i class="fas fa-wrench"></i> Configurator</a>
+    </nav>
+    <h1>My Garage Builds</h1>
+    <p>Persistent 3D car builds saved to MongoDB Atlas</p>
+    <div id="userBadge" class="user-tag" style="display: none;"></div>
+  </header>
+
+  <main class="container">
+    <div id="loadingIndicator" style="text-align: center; padding: 3rem;">
+      <i class="fas fa-spinner fa-spin fa-2x" style="color: #ff8c00;"></i>
+      <p style="margin-top: 1rem; opacity: 0.8;">Loading your saved builds...</p>
+    </div>
+
+    <div id="unauthNotice" class="empty-state" style="display: none;">
+      <i class="fas fa-user-lock"></i>
+      <h2>Sign in to view your garage</h2>
+      <p>Save and manage your custom car tuning projects with a real account.</p>
+      <a href="login.html" class="nav-btn" style="background: linear-gradient(45deg, #ff8c00, #ff5500); color: white; padding: 10px 24px; font-weight: 600;">
+        Sign In / Register
+      </a>
+    </div>
+
+    <div id="emptyNotice" class="empty-state" style="display: none;">
+      <i class="fas fa-car-side"></i>
+      <h2>No builds saved yet</h2>
+      <p>Configure a car in the 3D tuning lab and click "Save This Build".</p>
+      <a href="car_selection.html" class="nav-btn" style="background: linear-gradient(45deg, #ff8c00, #ff5500); color: white; padding: 10px 24px; font-weight: 600;">
+        Start Tuning a Car
+      </a>
+    </div>
+
+    <div id="buildsGrid" class="builds-grid" style="display: none;"></div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    async function initMyBuilds() {
+      const loading = document.getElementById('loadingIndicator');
+      const unauthNotice = document.getElementById('unauthNotice');
+      const emptyNotice = document.getElementById('emptyNotice');
+      const buildsGrid = document.getElementById('buildsGrid');
+      const userBadge = document.getElementById('userBadge');
+
+      const currentUser = getCurrentUser();
+      const authenticated = isLoggedIn();
+
+      if (!authenticated) {
+        loading.style.display = 'none';
+        unauthNotice.style.display = 'block';
+        return;
+      }
+
+      if (currentUser) {
+        userBadge.textContent = `Tuner: ${currentUser.username || currentUser.email}`;
+        userBadge.style.display = 'inline-block';
+      }
+
+      try {
+        const builds = await window.getMyBuilds();
+        loading.style.display = 'none';
+
+        if (!builds || builds.length === 0) {
+          emptyNotice.style.display = 'block';
+          return;
+        }
+
+        buildsGrid.style.display = 'grid';
+        buildsGrid.innerHTML = '';
+
+        builds.forEach(build => {
+          const card = document.createElement('div');
+          card.className = 'build-card';
+          card.id = `build-${build._id}`;
+
+          const carBrand = build.car?.brand || 'Custom';
+          const carModel = build.car?.model || 'Car';
+          const carImg = build.thumbnailUrl || (build.car?.images && build.car.images[0]?.url) || '';
+
+          const colorsHtml = (build.paintColors && build.paintColors.length > 0)
+            ? build.paintColors.map(c => `
+                <span class="color-swatch-row">
+                  <span class="color-swatch" style="background-color: ${c.hex}"></span>
+                  <span style="font-size:0.8rem;">${c.materialName}</span>
+                </span>
+              `).join('')
+            : '<span style="opacity:0.6;">Default paint</span>';
+
+          const shareUrl = `${window.location.origin}${window.location.pathname}?share=${build.shareSlug}`;
+
+          card.innerHTML = `
+            <div class="build-img-box">
+              ${carImg 
+                ? `<img src="${carImg}" alt="${carModel}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                   <i class="fas fa-car build-placeholder-icon" style="display:none;"></i>`
+                : `<i class="fas fa-car build-placeholder-icon"></i>`
+              }
+              <div class="build-badge">${build.isPublic ? '🌐 Public' : '🔒 Private'}</div>
+            </div>
+            <div class="build-content">
+              <div class="build-car-title">${carBrand} • ${build.car?.year || ''}</div>
+              <h3 class="build-name">${build.name || `${carModel} Build`}</h3>
+              <div class="build-specs">
+                <div><strong>Rim:</strong> ${build.selectedRim || 'Standard'}</div>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:4px;">
+                  <strong>Paint:</strong> ${colorsHtml}
+                </div>
+                <div style="margin-top:4px; font-size:0.78rem; opacity:0.6;">
+                  Saved: ${new Date(build.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="btn-action btn-tune" onclick="loadBuildIntoConfigurator('${encodeURIComponent(JSON.stringify(build))}')">
+                  <i class="fas fa-wrench"></i> Tune
+                </button>
+                <button class="btn-action btn-share" onclick="copyShareLink('${shareUrl}')" title="Copy public share link">
+                  <i class="fas fa-share-nodes"></i> Share
+                </button>
+                <button class="btn-action btn-delete" onclick="handleDeleteBuild('${build._id}')" title="Delete build">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `;
+
+          buildsGrid.appendChild(card);
+        });
+
+      } catch (error) {
+        loading.style.display = 'none';
+        showToast('Error loading builds: ' + error.message, 'error');
+      }
+    }
+
+    function copyShareLink(url) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Share link copied to clipboard!', 'success');
+        }).catch(() => {
+          prompt('Copy this share link:', url);
+        });
+      } else {
+        prompt('Copy this share link:', url);
+      }
+    }
+
+    async function handleDeleteBuild(buildId) {
+      if (!confirm('Are you sure you want to delete this build from your garage?')) return;
+
+      try {
+        await window.deleteBuild(buildId);
+        showToast('Build deleted successfully', 'success');
+        const card = document.getElementById(`build-${buildId}`);
+        if (card) card.remove();
+
+        const grid = document.getElementById('buildsGrid');
+        if (grid && grid.children.length === 0) {
+          document.getElementById('emptyNotice').style.display = 'block';
+        }
+      } catch (err) {
+        showToast('Failed to delete build: ' + err.message, 'error');
+      }
+    }
+
+    function loadBuildIntoConfigurator(encodedBuild) {
+      try {
+        const build = JSON.parse(decodeURIComponent(encodedBuild));
+        if (build.car) {
+          localStorage.setItem('selectedCar', `${build.car.brand} ${build.car.model}`);
+          if (build.car.slug) localStorage.setItem('selectedModelId', build.car.slug);
+          if (build.car.model3D?.url) localStorage.setItem('selectedModel', build.car.model3D.url);
+        }
+        if (build.paintColors && build.paintColors.length > 0) {
+          localStorage.setItem('savedPaintColors', JSON.stringify(build.paintColors));
+        }
+        window.location.href = 'tuning page.html';
+      } catch (e) {
+        console.error('Failed to load build', e);
+        window.location.href = 'tuning page.html';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initMyBuilds);
+  </script>
+</body>
+</html>

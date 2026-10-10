@@ -10,10 +10,14 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+*.env
+!.env.example
 
-# Firebase service account key
-serviceAccountKey.json
+# Secret credentials
+*serviceAccountKey*.json
 *-service-account-key.json
+*.pem
+*.key
 
 # Logs
 logs
@@ -25,10 +29,8 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Coverage directory
 coverage/
-
-# nyc test coverage
 .nyc_output
 
 # Dependency directories
@@ -47,9 +49,6 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-.env
-
 # IDE files
 .vscode/
 .idea/
@@ -58,15 +57,4 @@ jspm_packages/
 
 # OS generated files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# Firebase
-.firebase/
-firebase-debug.log
-firestore-debug.log
-ui-debug.log

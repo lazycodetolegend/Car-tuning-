@@ -1,5 +1,5 @@
 // Homepage JavaScript (using global functions)
-// Functions are now available globally from simple-auth.js
+// Functions are available globally from api.js
 
 // DOM Elements
 const userInfo = document.getElementById('userInfo');
@@ -10,7 +10,7 @@ const profileEmail = document.getElementById('profileEmail');
 
 // Initialize authentication state
 document.addEventListener('DOMContentLoaded', () => {
-  // Wait for Firebase to be ready
+  // Wait for auth state to be ready
   setTimeout(() => {
     if (typeof onAuthStateChange === 'function') {
       onAuthStateChange((user) => {

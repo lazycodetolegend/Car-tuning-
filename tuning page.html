@@ -152,8 +152,8 @@
           <div class="tune-option" id="rim3Btn">🛞 Rim 3</div>
           <div class="tune-option" id="body1Btn">🚗 Body 1</div>
           <div class="tune-option" id="stockBodyBtn">🚗 Stock Body</div>
-          <div class="tune-option" id="body2Btn">🚗 Body 2</div>
-        </div>
+        <div class="tune-option" id="saveBuildBtn" style="background: linear-gradient(45deg, #ff8c00, #ff5500); font-weight: 600; margin-top: 8px;">💾 Save This Build</div>
+        <a href="my-builds.html" class="tune-option" style="text-decoration: none; color: #4ecdc4; border: 1px solid rgba(78, 205, 196, 0.4); display: block;">📂 My Garage</a>
       </div>
       <div class="back-button" id="backBtn">⬅ Back</div>
     </div>
@@ -165,6 +165,7 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/DRACOLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="js/api.js"></script>
 
   <script>
     // Cursor
@@ -279,16 +280,99 @@
         });
       });
 
+      // Rim and Paint state tracking
+      let currentRimSelection = "wheel_set_stock";
+      let currentPaintColors = {};
+
       // Buttons
-      document.getElementById("rim1Btn")?.addEventListener("click", () => showOnly(rims, "rim_set1"));
-      document.getElementById("stockRimBtn")?.addEventListener("click", () => showOnly(rims, "wheel_set_stock"));
-      document.getElementById("rim3Btn")?.addEventListener("click", () => showOnly(rims, "rim_set3"));
+      document.getElementById("rim1Btn")?.addEventListener("click", () => {
+        currentRimSelection = "rim_set1";
+        showOnly(rims, "rim_set1");
+      });
+      document.getElementById("stockRimBtn")?.addEventListener("click", () => {
+        currentRimSelection = "wheel_set_stock";
+        showOnly(rims, "wheel_set_stock");
+      });
+      document.getElementById("rim3Btn")?.addEventListener("click", () => {
+        currentRimSelection = "rim_set3";
+        showOnly(rims, "rim_set3");
+      });
 
       document.getElementById("body1Btn")?.addEventListener("click", () => showOnly(bodies, "body1"));
       document.getElementById("stockBodyBtn")?.addEventListener("click", () => showOnly(bodies, "stockbody"));
       document.getElementById("body2Btn")?.addEventListener("click", () => showOnly(bodies, "body2"));
 
-      document.getElementById("applyPaint").addEventListener("click", applyPaint);
+      document.getElementById("applyPaint").addEventListener("click", () => {
+        const part = document.getElementById("materialSelect").value;
+        const hex = document.getElementById("colorPicker").value;
+        if (part) {
+          currentPaintColors[part] = hex;
+        }
+        applyPaint();
+      });
+
+      // Save Build Button Handler
+      document.getElementById("saveBuildBtn")?.addEventListener("click", async () => {
+        if (!window.isUserAuthenticated || !window.isUserAuthenticated()) {
+          if (window.showToast) {
+            window.showToast("Please sign in to save your build!", "error");
+          } else {
+            alert("Please sign in to save your build!");
+          }
+          localStorage.setItem("returnUrl", window.location.href);
+          setTimeout(() => { window.location.href = "login.html"; }, 1200);
+          return;
+        }
+
+        const selectedCarName = localStorage.getItem('selectedCar') || 'Lamborghini Gallardo';
+        const selectedModelId = localStorage.getItem('selectedModelId') || 'lamborghini-gallardo';
+        const saveBtn = document.getElementById("saveBuildBtn");
+        const originalText = saveBtn.textContent;
+        saveBtn.textContent = "⏳ Saving...";
+        saveBtn.style.pointerEvents = "none";
+
+        const paintList = Object.entries(currentPaintColors).map(([part, hex]) => ({
+          materialName: part,
+          hex: hex
+        }));
+
+        if (paintList.length === 0) {
+          const defaultHex = document.getElementById("colorPicker")?.value || '#ff3b30';
+          paintList.push({ materialName: 'body', hex: defaultHex });
+        }
+
+        const payload = {
+          car: selectedModelId,
+          name: `${selectedCarName} Custom Build`,
+          paintColors: paintList,
+          selectedRim: currentRimSelection,
+          extras: {
+            turbo: ["Off", "Stage 1 (+50HP)", "Stage 2 (+120HP)"][turboStage] || "Off",
+            ecu: ["Stock", "Stage 1", "Stage 2", "Race Map"][ecuStage] || "Stock",
+            finish: document.getElementById("finishSelect")?.value || "metallic"
+          },
+          isPublic: true
+        };
+
+        try {
+          const saved = await window.saveBuildToApi(payload);
+          if (window.showToast) {
+            window.showToast("Build saved to your Garage! 🚗", "success");
+          } else {
+            alert("Build saved successfully!");
+          }
+        } catch (err) {
+          console.error("Save build error:", err);
+          if (window.showToast) {
+            window.showToast("Failed to save build: " + err.message, "error");
+          } else {
+            alert("Failed to save build: " + err.message);
+          }
+        } finally {
+          saveBtn.textContent = originalText;
+          saveBtn.style.pointerEvents = "auto";
+        }
+      });
       document.getElementById("backBtn").addEventListener("click", () => { 
         if (window.history.length > 1 && document.referrer) {
           window.location.href = document.referrer;

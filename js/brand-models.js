@@ -1,5 +1,5 @@
 // Brand Models JavaScript (using global functions)
-// Functions are now available globally from simple-auth.js
+// Functions are available globally from api.js
 
 // Global variables
 let currentUser = null;
