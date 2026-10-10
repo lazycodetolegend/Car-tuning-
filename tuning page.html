@@ -163,6 +163,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/DRACOLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/controls/OrbitControls.js"></script>
 
   <script>
@@ -214,6 +215,9 @@
       document.title = `Tuning – ${selectedCarName}`;
 
       const loader = new THREE.GLTFLoader();
+    const _draco_loader = new THREE.DRACOLoader();
+    _draco_loader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.6/");
+    loader.setDRACOLoader(_draco_loader);
       loader.load(modelPath, gltf => {
         carModel = gltf.scene; 
         scene.add(carModel);
