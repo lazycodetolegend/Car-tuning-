@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All 3D Cars - Car Tuning Garage</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
+  <link rel="stylesheet" href="css/responsive.css"/>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <style>
+    * {
+      cursor: none !important;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #141416 0%, #1f1f24 100%);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .header {
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(10px);
+      position: relative;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      background: linear-gradient(45deg, #ff8c00, #ff5500, #ffae19);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      font-size: 1.15rem;
+      opacity: 0.8;
+      margin: 0;
+    }
+
+    .car-selection-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+    }
+
+    .car-selection {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .car-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .car-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transition: left 0.5s ease;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .car-card:hover::before {
+      left: 100%;
+    }
+
+    .car-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 35px rgba(255, 140, 0, 0.3);
+      border-color: rgba(255, 140, 0, 0.5);
+    }
+
+    .model-3d-box {
+      width: 100%;
+      height: 220px;
+      background: radial-gradient(circle at 50% 50%, #292932 0%, #131317 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .model-3d-box model-viewer {
+      width: 100%;
+      height: 100%;
+      --poster-color: transparent;
+      outline: none;
+    }
+
+    .badge-3d {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 140, 0, 0.5);
+      color: #ff8c00;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 5;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .hint-3d {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 3px 10px;
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.7);
+      pointer-events: none;
+      z-index: 5;
+      white-space: nowrap;
+      transition: all 0.3s ease;
+    }
+
+    .car-card:hover .hint-3d {
+      color: #ff8c00;
+      border-color: rgba(255, 140, 0, 0.4);
+      background: rgba(0, 0, 0, 0.85);
+    }
+
+    .car-card-body {
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .car-brand-name {
+      font-size: 0.75rem;
+      color: #ff8c00;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+    }
+
+    .car-name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0 0 0.8rem 0;
+      color: #fff;
+    }
+
+    .btn-tune {
+      background: linear-gradient(45deg, #ff8c00, #ff5500);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.25s ease;
+      width: 100%;
+      font-size: 0.95rem;
+    }
+
+    .btn-tune:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(255, 140, 0, 0.4);
+    }
+
+    .modal {
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100%; 
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .modal-content {
+      background: rgba(35, 35, 42, 0.95);
+      border: 1px solid rgba(255, 140, 0, 0.4);
+      padding: 2.5rem;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      color: #fff;
+      font-size: 1.5rem;
+    }
+
+    .modal-content button {
+      margin-top: 1.5rem;
+      padding: 0.8rem 2rem;
+      background: linear-gradient(45deg, #ff8c00, #ff5500);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .modal-content button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
+    }
+
+    .cursor {
+      width: 40px;  
+      height: 40px;
+      background: url('images/flag.png') no-repeat center center;
+      background-size: contain;
+      position: fixed;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 3000;
+    }
+
+    .back-button {
+      position: fixed;
+      top: 2rem;
+      left: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50px;
+      padding: 1rem 1.5rem;
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(-5px);
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+      .car-selection {
+        grid-template-columns: 1fr;
+      }
+      .back-button {
+        top: 1rem;
+        left: 1rem;
+        padding: 0.8rem 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="cursor"></div>
+  
+  <a href="brand_selection.html" class="back-button">
+    <i class="fas fa-arrow-left"></i>
+    <span>Back to Brands</span>
+  </a>
+
+  <div class="header">
+    <h1>All 3D Car Models</h1>
+    <p>Interact with live 3D models and choose any supercar or sports car to tune</p>
+  </div>
+
+  <div class="car-selection-container">
+    <div class="car-selection" id="carSelection">
+      <!-- Populated dynamically with 3D model-viewers -->
+    </div>
+  </div>
+
+  <div class="modal" id="carModal">
+    <div class="modal-content">
+      <i class="fas fa-car" style="font-size: 3rem; color: #ff8c00; margin-bottom: 1rem;"></i>
+      <h2 id="selectedCar">Selected Car</h2>
+      <p style="color: #aaa; margin: 0;">Ready to customize paint, rims, exhaust sound, turbo and ECU?</p>
+      <button onclick="goToTuning()"><i class="fas fa-wrench"></i> Enter Garage</button>
+    </div>
+  </div>
+
+<script>
+  const cursor = document.querySelector('.cursor');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+  });
+
+  const carConfigs = {
+    "Audi R8": {
+      brand: "Audi",
+      model: "models/r8.glb",
+      image: "images/audi.jpg",
+      paintMaterials: ["Body_Paint", "Mirror_Paint"]
+    },
+    "Audi RS6 Avant": {
+      brand: "Audi",
+      model: "models/2020_audi_rs6_avant.glb",
+      image: "images/rs6.jpg",
+      paintMaterials: ["Car_Body", "Body"]
+    },
+    "Lamborghini Gallardo": {
+      brand: "Lamborghini",
+      model: "models/gallardomain.glb",
+      image: "images/lambo.jpg",
+      paintMaterials: ["gallardoVehicle_Exterior_mm_ext1","gallardoVehicle_Exterior_mm_cab1"]
+    },
+    "Lamborghini Huracán": {
+      brand: "Lamborghini",
+      model: "models/lamborghini_huracan.glb",
+      image: "images/huracan.jpg",
+      paintMaterials: ["Car_Body", "paint"]
+    },
+    "Lamborghini Revuelto": {
+      brand: "Lamborghini",
+      model: "models/lamborghini_revuelto.glb",
+      image: "images/reveoulto.jpg",
+      paintMaterials: ["Car_Body", "paint"]
+    },
+    "Ferrari F40": {
+      brand: "Ferrari",
+      model: "models/1987_ferrari_f40.glb",
+      image: "images/f40.jpg",
+      paintMaterials: ["Car_Body", "paint"]
+    },
+    "Ferrari 12Cilindri": {
+      brand: "Ferrari",
+      model: "models/2025_ferrari_12cilindri.glb",
+      image: "images/12cilindri.jpg",
+      paintMaterials: ["Car_Body", "paint"]
+    },
+    "BMW M4 F82": {
+      brand: "BMW",
+      model: "models/f82.glb",
+      image: "images/bmw.jpg",
+      paintMaterials: ["Car_Body"]
+    },
+    "BMW M8 Competition": {
+      brand: "BMW",
+      model: "models/m8.glb",
+      image: "images/bmw.jpg",
+      paintMaterials: ["Car_Body"]
+    },
+    "Toyota Supra MK4": {
+      brand: "Toyota",
+      model: "models/supra.glb",
+      image: "images/supra.png",
+      paintMaterials: ["Car_Body"]
+    },
+    "Toyota GR Supra MK5": {
+      brand: "Toyota",
+      model: "models/mk5.glb",
+      image: "images/mk5.jpg",
+      paintMaterials: ["Car_Body"]
+    },
+    "Nissan GTR R34": {
+      brand: "Nissan",
+      model: "models/r34.glb",
+      image: "images/nissan.jpg",
+      paintMaterials: ["Car_Body"]
+    },
+    "Nissan Skyline GT-R R33": {
+      brand: "Nissan",
+      model: "models/1997_nissan_skyline_gt-r_v-spec_r33.glb",
+      image: "images/r33.jpg",
+      paintMaterials: ["Car_Body"]
+    },
+    "Nissan Skyline GT-R R32": {
+      brand: "Nissan",
+      model: "models/nissan_skyline_r32_gt-r.glb",
+      image: "images/nissan.jpg",
+      paintMaterials: ["Car_Body"]
+    },
+    "Nissan Silvia S15": {
+      brand: "Nissan",
+      model: "models/s15main.glb",
+      image: "images/nissan.jpg",
+      paintMaterials: ["Car_Body"]
+    },
+    "Nissan Silvia S14": {
+      brand: "Nissan",
+      model: "models/s14.glb",
+      image: "images/nissan.jpg",
+      paintMaterials: ["Car_Body"]
+    },
+    "Porsche 911 Carrera": {
+      brand: "Porsche",
+      model: "models/996.glb",
+      image: "images/logo.png",
+      paintMaterials: ["Car_Body"]
+    },
+    "Mercedes-AMG GT": {
+      brand: "Mercedes-Benz",
+      model: "models/car_modular.glb",
+      image: "images/logo.png",
+      paintMaterials: ["Car_Body"]
+    }
+  };
+
+  const modal = document.getElementById('carModal');
+  const selectedCarEl = document.getElementById('selectedCar');
+  const carSelection = document.getElementById('carSelection');
+  let selectedCar = '';
+
+  // Render cards with 3D model-viewer
+  function renderCarCards() {
+    carSelection.innerHTML = '';
+    Object.entries(carConfigs).forEach(([carName, config]) => {
+      const card = document.createElement('div');
+      card.className = 'car-card';
+      card.dataset.car = carName;
+
+      card.innerHTML = `
+        <div class="model-3d-box">
+          <div class="badge-3d"><i class="fas fa-cube"></i> 3D Model</div>
+          <model-viewer
+            src="${config.model}"
+            alt="${carName} 3D Model"
+            poster="${config.image || ''}"
+            auto-rotate
+            auto-rotate-delay="400"
+            rotation-per-second="25deg"
+            camera-controls
+            touch-action="pan-y"
+            shadow-intensity="1.2"
+            shadow-softness="0.8"
+            exposure="1.05"
+            interaction-prompt="none"
+            loading="lazy">
+          </model-viewer>
+          <div class="hint-3d"><i class="fas fa-arrows-rotate"></i> Drag to rotate in 3D</div>
+        </div>
+        <div class="car-card-body">
+          <div>
+            <div class="car-brand-name">${config.brand}</div>
+            <h3 class="car-name">${carName}</h3>
+          </div>
+          <button class="btn-tune" onclick="openCarModal('${carName}', event)">
+            <i class="fas fa-wrench"></i> Start Tuning
+          </button>
+        </div>
+      `;
+
+      carSelection.appendChild(card);
+    });
+  }
+
+  function openCarModal(carName, event) {
+    if (event) event.stopPropagation();
+    selectedCar = carName;
+    selectedCarEl.textContent = selectedCar;
+    modal.style.display = 'flex';
+  }
+
+  function goToTuning(){
+    if (!selectedCar) {
+      alert("Please select a car.");
+      return;
+    }
+    const config = carConfigs[selectedCar];
+    if (!config) {
+      alert("Model config not found!");
+      return;
+    }
+    localStorage.setItem('selectedCar', selectedCar);
+    localStorage.setItem('selectedModel', config.model);
+    localStorage.setItem('targetMaterials', JSON.stringify(config.paintMaterials));
+    window.location.href = "tuning page.html";
+  }
+
+  window.addEventListener('click', e => {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+
+  renderCarCards();
+</script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rims Gallery - Car Tuning Garage</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Poppins, sans-serif;
+      background: #121212;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+
+    .back-btn {
+      color: #fff;
+      text-decoration: none;
+      background: rgba(255,255,255,0.1);
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .back-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .main-view {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      overflow: hidden;
+    }
+
+    .model-container {
+      flex: 3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+    }
+
+    .model-container model-viewer {
+      width: 100%;
+      height: 90%;
+      background: transparent;
+    }
+
+    .rims-sidebar {
+      flex: 1.5;
+      display: flex;
+      flex-direction: column;
+      background-color: rgba(255, 255, 255, 0.03);
+      border-left: 1px solid rgba(255,255,255,0.1);
+      height: 100%;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+
+    .rim-brands {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .rim-brands button {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .rim-brands button:hover,
+    .rim-brands button.active {
+      background: #ff8c00;
+      border-color: #ff8c00;
+      transform: translateY(-2px);
+    }
+
+    .rims-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+      overflow-y: auto;
+    }
+
+    .rim-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      width: 100%;
+      max-width: 260px;
+      transition: transform 0.2s;
+    }
+
+    .rim-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 140, 0, 0.5);
+    }
+
+    .rim-card model-viewer {
+      width: 100%;
+      height: 180px;
+    }
+
+    .rim-card p {
+      margin: 8px 0 0 0;
+      font-weight: 500;
+      color: #eee;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <a href="brand_models.html" class="back-btn">
+      <i class="fas fa-arrow-left"></i> Back to Garage
+    </a>
+    <h2><i class="fas fa-compact-disc"></i> Aftermarket Wheels Gallery</h2>
+    <div></div>
+  </div>
+
+  <div class="main-view">
+    <!-- Car model preview -->
+    <div class="model-container">
+      <model-viewer id="carModel"
+        src="models/gallardomain.glb"
+        alt="Selected Car"
+        camera-controls
+        auto-rotate
+        shadow-intensity="1">
+      </model-viewer>
+    </div>
+
+    <!-- Rims list -->
+    <div class="rims-sidebar">
+      <div class="rim-brands">
+        <button onclick="filterRims('all')" class="active" id="btn-all"><i class="fas fa-th"></i> All</button>
+        <button onclick="filterRims('work')" id="btn-work"><i class="fas fa-circle-notch"></i> Work</button>
+        <button onclick="filterRims('bbs')" id="btn-bbs"><i class="fas fa-compact-disc"></i> BBS</button>
+        <button onclick="filterRims('enkei')" id="btn-enkei"><i class="fas fa-dharmachakra"></i> Enkei</button>
+      </div>
+
+      <div class="rims-grid" id="rimsContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    const carModel = document.getElementById('carModel');
+    const rawCarPath = localStorage.getItem('selectedModel') || 'models/gallardomain.glb';
+    carModel.setAttribute('src', rawCarPath.replace(/^\//, ''));
+
+    const rimsData = [
+      { name: "Work Meister S1", brand: "work", file: "rims/meister.glb" },
+      { name: "Work Equip 05", brand: "work", file: "rims/equip 5.glb" },
+      { name: "Work VS-XX", brand: "work", file: "rims/vs-xx.glb" },
+      { name: "BBS LM", brand: "bbs", file: "rims/lm.glb" },
+      { name: "Enkei NT03+M", brand: "enkei", file: "rims/nt03.glb" },
+      { name: "Track Performance Tire", brand: "all", file: "rims/tire.glb" }
+    ];
+
+    const rimsContainer = document.getElementById("rimsContainer");
+
+    function filterRims(brand) {
+      document.querySelectorAll('.rim-brands button').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`btn-${brand}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      rimsContainer.innerHTML = "";
+      const filtered = (brand === 'all') ? rimsData : rimsData.filter(r => r.brand === brand || brand === 'all');
+
+      filtered.forEach(rim => {
+        const card = document.createElement("div");
+        card.className = "rim-card";
+        card.innerHTML = `
+          <model-viewer src="${rim.file}" alt="${rim.name}" camera-controls auto-rotate shadow-intensity="1"></model-viewer>
+          <p>${rim.name}</p>
+        `;
+        rimsContainer.appendChild(card);
+      });
+    }
+
+    // Initialize with all rims
+    filterRims('all');
+  </script>
+</body>
+</html>

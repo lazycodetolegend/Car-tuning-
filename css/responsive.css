@@ -1,0 +1,418 @@
+/* Responsive Design for Car Tuning App */
+
+/* Mobile First Approach */
+@media (max-width: 768px) {
+  /* Homepage Mobile Styles */
+  .background {
+    padding: 1rem;
+  }
+  
+  .background h1 {
+    font-size: 2rem;
+    margin-top: 20px;
+  }
+  
+  .profile-wrapper {
+    top: 10px;
+    right: 10px;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .user-info {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .profile-photo {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .sidebar {
+    width: 100%;
+    left: -100%;
+  }
+  
+  .sidebar.active {
+    left: 0;
+  }
+  
+  .button-container {
+    margin-top: 2rem;
+  }
+  
+  #playButton img {
+    width: 120px;
+  }
+  
+  #riveCanvas {
+    width: 300px;
+    height: 300px;
+  }
+  
+  /* Login Page Mobile Styles */
+  .container {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .logo-section {
+    padding: 1rem;
+    order: 2;
+  }
+  
+  .logo-section h1 {
+    font-size: 2rem;
+  }
+  
+  .logo-section p {
+    font-size: 1rem;
+  }
+  
+  .auth-container {
+    order: 1;
+    min-height: auto;
+  }
+  
+  .login-box {
+    padding: 1.5rem;
+  }
+  
+  .message-container {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+  }
+  
+  /* Car Selection Mobile Styles */
+  .car-selection {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .car-card {
+    border-radius: 8px;
+  }
+  
+  .car-card img {
+    height: 100px;
+  }
+  
+  .car-card p {
+    font-size: 0.9rem;
+    padding: 0.25rem;
+  }
+  
+  .modal-content {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  /* Tuning Page Mobile Styles */
+  body {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    padding: 1rem;
+    background: rgba(0,0,0,0.8);
+  }
+  
+  .tune-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .tune-option {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+  
+  .model-viewer-wrapper {
+    position: relative;
+    width: 100%;
+    height: 50vh;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin-top: 1rem;
+  }
+  
+  .rim-container {
+    position: relative;
+    width: 100%;
+    height: auto;
+    background: rgba(0,0,0,0.9);
+    padding: 1rem;
+    display: none;
+  }
+  
+  .rim-container.active {
+    display: block;
+  }
+  
+  .rim-container model-viewer {
+    width: 100%;
+    height: 150px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .material-select,
+  .finish-select {
+    font-size: 0.8rem;
+    padding: 0.4rem;
+  }
+  
+  #colorPicker {
+    height: 2rem;
+  }
+}
+
+/* Tablet Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .container {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+  
+  .car-selection {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.25rem;
+  }
+  
+  .tune-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .model-viewer-wrapper {
+    width: 70%;
+    height: 70%;
+  }
+}
+
+/* Large Desktop Styles */
+@media (min-width: 1025px) {
+  .container {
+    max-width: 1400px;
+  }
+  
+  .car-selection {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 2rem;
+  }
+  
+  .tune-options {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .model-viewer-wrapper {
+    width: 60%;
+    height: 80%;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .tune-option,
+  .back-button,
+  .car-card {
+    min-height: 44px; /* iOS touch target minimum */
+  }
+  
+  .profile-photo {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .sidebar a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Remove hover effects on touch devices */
+  .tune-option:hover,
+  .back-button:hover,
+  .car-card:hover,
+  .profile-photo:hover,
+  .sidebar a:hover {
+    transform: none;
+    box-shadow: none;
+    background-color: inherit;
+  }
+}
+
+/* High DPI Display Optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .logo {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+  
+  .car-card img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Landscape Mobile Orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+  .background {
+    padding: 0.5rem;
+  }
+  
+  .background h1 {
+    font-size: 1.5rem;
+    margin-top: 10px;
+  }
+  
+  .button-container {
+    margin-top: 1rem;
+  }
+  
+  #playButton img {
+    width: 100px;
+  }
+  
+  #riveCanvas {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .sidebar {
+    width: 250px;
+  }
+  
+  .tune-options {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .model-viewer-wrapper {
+    height: 60vh;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .profile-wrapper,
+  .sidebar,
+  .cursor,
+  .button-container,
+  .modal-overlay {
+    display: none !important;
+  }
+  
+  .background {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .background h1 {
+    color: black !important;
+  }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .cursor {
+    display: none !important;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .login-box {
+    background: rgba(30, 30, 30, 0.95);
+    color: white;
+  }
+  
+  .login-box h2,
+  .login-box p {
+    color: white;
+  }
+  
+  .input-group input {
+    background: rgba(50, 50, 50, 0.8);
+    color: white;
+    border-color: #555;
+  }
+  
+  .input-group input:focus {
+    border-color: #667eea;
+  }
+  
+  .input-group input::placeholder {
+    color: #999;
+  }
+  
+  .modal-content {
+    background: #2a2a2a;
+    color: white;
+  }
+  
+  .modal-header h2 {
+    color: white;
+  }
+  
+  .project-item {
+    background: rgba(50, 50, 50, 0.8);
+    border-color: #555;
+  }
+  
+  .project-item:hover {
+    background: rgba(70, 70, 70, 0.8);
+  }
+}
+
+/* Focus Management for Keyboard Navigation */
+.tune-option:focus,
+.back-button:focus,
+.car-card:focus,
+.profile-photo:focus,
+.sidebar a:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Loading States */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

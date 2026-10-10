@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tuning – Gallardo (Three.js)</title>
+  <style>
+    * {
+      cursor: none !important;
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      background: #121212;
+      color: #fff;
+      font-family: Poppins, sans-serif;
+      overflow: hidden;
+    }
+
+    .bg {
+      background-image: url("images/g7.jpg");
+      background-size: cover;
+      background-position: center;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 260px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      z-index: 5;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #888 transparent;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background-color: #888;
+      border-radius: 3px;
+    }
+
+    .tune-options {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tune-option,
+    .back-button {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.8rem;
+      margin-bottom: 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .tune-option:hover,
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .model-viewer-wrapper {
+      position: absolute;
+      width: 60%;
+      height: 80%;
+      top: 50%;
+      left: 60%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .material-select,
+    .finish-select {
+      background: rgba(255, 255, 255, 0.8);
+      border: none;
+      color: #434343;
+      padding: 0.5rem;
+      margin-bottom: 0.8rem;
+      border-radius: 6px;
+      width: 100%;
+      font-size: 0.9rem;
+    }
+
+    #colorPicker {
+      width: 100%;
+      margin-bottom: 0.8rem;
+      height: 2.5rem;
+      border: none;
+      cursor: pointer;
+    }
+
+    .cursor {
+      width: 40px;
+      height: 40px;
+      background: url('images/flag.png') no-repeat center center;
+      background-size: contain;
+      position: fixed;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="cursor"></div>
+
+  <div class="bg">
+    <div class="sidebar">
+      <div class="tune-options">
+        <select id="materialSelect" class="material-select">
+          <option value="">Select Part to Paint</option>
+          <option value="body">Body</option>
+          <option value="rims">Rims</option>
+        </select>
+        <input type="color" id="colorPicker" />
+        <select id="finishSelect" class="finish-select">
+          <option value="metallic">Metallic</option>
+          <option value="gloss">Gloss</option>
+          <option value="matte">Matte</option>
+        </select>
+        <div class="tune-option" id="applyPaint">🎨 Apply Paint</div>
+        <div class="tune-option" id="turboBtn">🚀 Turbo: Off</div>
+        <div class="tune-option" id="ecuBtn">🧠 ECU: Stock</div>
+        <div class="tune-option" id="exhaustBtn">🔊 Exhaust Sound</div>
+        <div id="modularOptions">
+          <div class="tune-option" id="rim1Btn">🛞 Rim 1</div>
+          <div class="tune-option" id="stockRimBtn">🛞 Stock Rim</div>
+          <div class="tune-option" id="rim3Btn">🛞 Rim 3</div>
+          <div class="tune-option" id="body1Btn">🚗 Body 1</div>
+          <div class="tune-option" id="stockBodyBtn">🚗 Stock Body</div>
+          <div class="tune-option" id="body2Btn">🚗 Body 2</div>
+        </div>
+      </div>
+      <div class="back-button" id="backBtn">⬅ Back</div>
+    </div>
+
+    <div class="model-viewer-wrapper" id="three-container"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+    // Cursor
+    const cursor = document.querySelector('.cursor');
+    document.addEventListener('mousemove', e => { 
+      cursor.style.left = e.clientX + 'px'; 
+      cursor.style.top = e.clientY + 'px'; 
+    });
+
+    // Three.js
+    let scene, camera, renderer, controls, carModel;
+    let rims = {}, bodies = {};
+    let paintedMaterials = { body: {}, rims: {} };
+    const rimNames = ["rim_set1", "wheel_set_stock", "rim_set3"];
+    const bodyNames = ["body1", "stockbody", "body2"];
+
+    init(); 
+    animate();
+
+    function init() {
+      const container = document.getElementById("three-container");
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+      camera.position.set(0, 2, 7);
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      container.appendChild(renderer.domElement);
+
+      // Lights
+      scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+      const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6); 
+      hemi.position.set(0, 20, 0); 
+      scene.add(hemi);
+      [[5, 5, 5], [-5, 5, 5], [5, 5, -5], [-5, 5, -5], [0, 4, 0]].forEach(([x, y, z]) => {
+        const pl = new THREE.PointLight(0xffffff, 0.8, 30); 
+        pl.position.set(x, y, z); 
+        scene.add(pl);
+      });
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement); 
+      controls.enableDamping = true; 
+      controls.dampingFactor = 0.05;
+
+      // Determine model to load
+      let rawModel = localStorage.getItem('selectedModel') || 'models/gallardomain.glb';
+      let modelPath = rawModel.replace(/^\//, '');
+      const selectedCarName = localStorage.getItem('selectedCar') || 'Lamborghini Gallardo';
+      document.title = `Tuning – ${selectedCarName}`;
+
+      const loader = new THREE.GLTFLoader();
+      loader.load(modelPath, gltf => {
+        carModel = gltf.scene; 
+        scene.add(carModel);
+
+        // Center and scale model proportionally
+        const box = new THREE.Box3().setFromObject(carModel);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        carModel.position.sub(center);
+
+        const maxDim = Math.max(size.x, size.y, size.z);
+        if (maxDim > 0) {
+          const targetSize = 4.8;
+          const scale = targetSize / maxDim;
+          carModel.scale.setScalar(scale);
+
+          // Re-center on floor after scaling
+          const newBox = new THREE.Box3().setFromObject(carModel);
+          const newCenter = newBox.getCenter(new THREE.Vector3());
+          carModel.position.x -= newCenter.x;
+          carModel.position.z -= newCenter.z;
+          carModel.position.y -= newBox.min.y;
+        }
+
+        rimNames.forEach(name => { const part = carModel.getObjectByName(name); if (part) rims[name] = part; });
+        bodyNames.forEach(name => { const part = carModel.getObjectByName(name); if (part) bodies[name] = part; });
+
+        if (Object.keys(bodies).length > 0) {
+          showOnly(rims, "wheel_set_stock");
+          showOnly(bodies, "stockbody");
+        } else {
+          const modularDiv = document.getElementById("modularOptions");
+          if (modularDiv) modularDiv.style.display = "none";
+        }
+      }, undefined, error => {
+        console.warn("Failed to load selected model, falling back to gallardomain.glb:", error);
+        loader.load('models/gallardomain.glb', gltf => {
+          carModel = gltf.scene; 
+          scene.add(carModel);
+          const box = new THREE.Box3().setFromObject(carModel);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+          carModel.position.sub(center);
+          const maxDim = Math.max(size.x, size.y, size.z);
+          if (maxDim > 0) {
+            const targetSize = 4.8;
+            const scale = targetSize / maxDim;
+            carModel.scale.setScalar(scale);
+            const newBox = new THREE.Box3().setFromObject(carModel);
+            const newCenter = newBox.getCenter(new THREE.Vector3());
+            carModel.position.x -= newCenter.x;
+            carModel.position.z -= newCenter.z;
+            carModel.position.y -= newBox.min.y;
+          }
+          rimNames.forEach(name => { const part = carModel.getObjectByName(name); if (part) rims[name] = part; });
+          bodyNames.forEach(name => { const part = carModel.getObjectByName(name); if (part) bodies[name] = part; });
+          showOnly(rims, "wheel_set_stock");
+          showOnly(bodies, "stockbody");
+        });
+      });
+
+      // Buttons
+      document.getElementById("rim1Btn")?.addEventListener("click", () => showOnly(rims, "rim_set1"));
+      document.getElementById("stockRimBtn")?.addEventListener("click", () => showOnly(rims, "wheel_set_stock"));
+      document.getElementById("rim3Btn")?.addEventListener("click", () => showOnly(rims, "rim_set3"));
+
+      document.getElementById("body1Btn")?.addEventListener("click", () => showOnly(bodies, "body1"));
+      document.getElementById("stockBodyBtn")?.addEventListener("click", () => showOnly(bodies, "stockbody"));
+      document.getElementById("body2Btn")?.addEventListener("click", () => showOnly(bodies, "body2"));
+
+      document.getElementById("applyPaint").addEventListener("click", applyPaint);
+      document.getElementById("backBtn").addEventListener("click", () => { 
+        if (window.history.length > 1 && document.referrer) {
+          window.location.href = document.referrer;
+        } else {
+          window.location.href = "brand_models.html"; 
+        }
+      });
+
+      // Performance Tuning
+      let turboStage = 0;
+      const turboBtn = document.getElementById("turboBtn");
+      if (turboBtn) {
+        turboBtn.addEventListener("click", () => {
+          turboStage = (turboStage + 1) % 3;
+          const labels = ["🚀 Turbo: Off", "🚀 Turbo: Stage 1 (+50HP)", "🚀 Turbo: Stage 2 (+120HP)"];
+          turboBtn.textContent = labels[turboStage];
+        });
+      }
+
+      let ecuStage = 0;
+      const ecuBtn = document.getElementById("ecuBtn");
+      if (ecuBtn) {
+        ecuBtn.addEventListener("click", () => {
+          ecuStage = (ecuStage + 1) % 4;
+          const labels = ["🧠 ECU: Stock", "🧠 ECU: Stage 1", "🧠 ECU: Stage 2", "🧠 ECU: Race Map"];
+          ecuBtn.textContent = labels[ecuStage];
+        });
+      }
+
+      // Exhaust audio
+      let engineAudio = null;
+      let isEnginePlaying = false;
+      const exhaustBtn = document.getElementById("exhaustBtn");
+      if (exhaustBtn) {
+        exhaustBtn.addEventListener("click", () => {
+          if (!engineAudio) {
+            engineAudio = new Audio('audio/car.mp3');
+            engineAudio.loop = true;
+          }
+          if (!isEnginePlaying) {
+            engineAudio.play().then(() => {
+              isEnginePlaying = true;
+              exhaustBtn.textContent = "🔊 Engine: Revving 🎵";
+            }).catch(err => {
+              console.warn("Audio play blocked or unavailable:", err);
+            });
+          } else {
+            engineAudio.pause();
+            engineAudio.currentTime = 0;
+            isEnginePlaying = false;
+            exhaustBtn.textContent = "🔊 Exhaust Sound";
+          }
+        });
+      }
+
+      window.addEventListener('resize', onWindowResize);
+    }
+
+    function showOnly(group, partName) {
+      Object.keys(group).forEach(name => {
+        group[name].visible = (name === partName);
+        if (group[name].visible) {
+          group[name].traverse(child => {
+            if (child.isMesh) {
+              let type = (group === bodies) ? "body" : "rims";
+              let savedMat = paintedMaterials[type][name];
+              if (savedMat) child.material = savedMat;
+              else {
+                child.material = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3, roughness: 0.2 });
+              }
+            }
+          });
+        }
+      });
+    }
+
+    function applyPaint() {
+      const part = document.getElementById("materialSelect").value;
+      if (!part) return alert("Select part to paint.");
+
+      const hex = document.getElementById("colorPicker").value;
+      const finish = document.getElementById("finishSelect").value;
+      let metallic = 0.9, roughness = 0.2;
+      if (finish === "gloss") { metallic = 0.3; roughness = 0.2; }
+      else if (finish === "metallic") { metallic = 1.0; roughness = 0.2; }
+      else if (finish === "matte") { metallic = 0.0; roughness = 0.9; }
+
+      const hasModular = Object.keys(bodies).length > 0;
+      if (hasModular) {
+        const targetParts = (part === "body") ? Object.values(bodies) : Object.values(rims);
+        targetParts.forEach(obj => {
+          if (!obj.visible) return;
+          obj.traverse(child => {
+            if (child.isMesh) {
+              const mat = new THREE.MeshStandardMaterial({ color: hex, metalness: metallic, roughness: roughness });
+              child.material = mat;
+              child.material.needsUpdate = true;
+              let type = (part === "body") ? "body" : "rims";
+              paintedMaterials[type][obj.name] = mat;
+            }
+          });
+        });
+      } else if (carModel) {
+        // Apply paint to loaded car model
+        let targetMaterials = [];
+        try {
+          targetMaterials = JSON.parse(localStorage.getItem('targetMaterials') || '[]');
+        } catch(e) {}
+
+        carModel.traverse(child => {
+          if (child.isMesh) {
+            const matName = (child.material?.name || '').toLowerCase();
+            const meshName = (child.name || '').toLowerCase();
+            let isMatch = false;
+
+            if (part === "body") {
+              if (targetMaterials.length > 0 && targetMaterials.some(t => matName.includes(t.toLowerCase()))) {
+                isMatch = true;
+              } else if (!meshName.includes("glass") && !meshName.includes("wheel") && !meshName.includes("rim") && !meshName.includes("tire") && !matName.includes("glass") && !matName.includes("tire")) {
+                isMatch = true;
+              }
+            } else if (part === "rims") {
+              if (meshName.includes("wheel") || meshName.includes("rim") || matName.includes("wheel") || matName.includes("rim")) {
+                isMatch = true;
+              }
+            }
+
+            if (isMatch) {
+              child.material = new THREE.MeshStandardMaterial({ color: hex, metalness: metallic, roughness: roughness });
+              child.material.needsUpdate = true;
+            }
+          }
+        });
+      }
+    }
+
+    function onWindowResize() {
+      const container = document.getElementById("three-container");
+      if (!container) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (controls) controls.update();
+      if (renderer && scene && camera) renderer.render(scene, camera);
+    }
+  </script>
+</body>
+</html>
