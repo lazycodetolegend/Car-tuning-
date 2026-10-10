@@ -1,0 +1,37 @@
+# ─────────────────────────────  SECRETS — NEVER COMMIT  ─────────────────────────────
+# The Firebase Admin SDK key gives full, rule-bypassing access to Firestore,
+# Storage and Auth. It must only ever live on the server / in a host's env vars.
+*firebase-adminsdk*.json
+*serviceAccount*.json
+*-adminsdk-*.json
+.env
+.env.*
+!.env.example
+config.env
+*.pem
+*.key
+
+# ─────────────────────────────  DEPENDENCIES  ─────────────────────────────
+node_modules/
+backend/node_modules/
+
+# ─────────────────────────────  BUILD OUTPUT  ─────────────────────────────
+dist/
+build/
+.vercel/
+.cache/
+
+# ─────────────────────────────  HEAVY WORKING FILES  ─────────────────────────────
+# Blender sources and derived backups are not needed by the deployed site.
+# Keep them on your machine (or in Drive), not in the repo.
+*.blend
+*.blend1
+
+# ─────────────────────────────  OS / EDITOR  ─────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.log
+npm-debug.log*
