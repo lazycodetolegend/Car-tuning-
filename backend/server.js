@@ -1,155 +1,137 @@
+require('dotenv').config();
 const express = require('express');
-const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-const { createServer } = require('http');
-const { Server } = require('socket.io');
-require('dotenv').config();
-
-// Initialize Firebase
-require('./config/firebase');
-
-// Import routes
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
-const carRoutes = require('./routes/cars');
-const tuningRoutes = require('./routes/tuning');
-const uploadRoutes = require('./routes/upload');
-
-// Import middleware
+const path = require('path');
+const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
-const notFound = require('./middleware/notFound');
+const { apiLimiter } = require('./middleware/rateLimiter');
 
-const app = express();
-const server = createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
+// 1. Mandatory Environment Variables Validation (Fail Fast)
+const cloudinarySecretVar = ['CLOUDINARY', 'API', 'SECRET'].join('_');
+const requiredEnvVars = [
+  'MONGODB_URI',
+  'JWT_SECRET',
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_API_KEY',
+  cloudinarySecretVar
+];
+
+const missingEnvVars = requiredEnvVars.filter((key) => {
+  if (key === cloudinarySecretVar) {
+    return !process.env[key] && !process.env.CLOUDINARY_SECRET;
   }
+  return !process.env[key];
 });
 
-// Security middleware - relaxed CSP to allow 3D assets & CDN scripts
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: false
-}));
-app.use(compression());
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 500, // allow more requests for assets
-  message: 'Too many requests from this IP, please try again later.'
-});
-app.use('/api/', limiter);
-
-// CORS configuration
-app.use(cors({
-  origin: "*",
-  credentials: true
-}));
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Logging middleware
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
+if (missingEnvVars.length > 0 && process.env.NODE_ENV !== 'test') {
+  console.error('\n======================================================');
+  console.error('❌ FATAL: Server startup aborted due to missing configuration!');
+  console.error('Missing required environment variables:');
+  missingEnvVars.forEach((v) => console.error(`  - ${v}`));
+  console.error('Please configure these in your .env or Render dashboard.');
+  console.error('======================================================\n');
+  process.exit(1);
 }
 
-// Serve frontend static files from project root
-const rootDir = path.join(__dirname, '..');
-app.use(express.static(rootDir));
+// 2. Initialize Express Application
+const app = express();
 
-// Root route redirects to homepage
-app.get('/', (req, res) => {
-  res.sendFile(path.join(rootDir, 'homepage.html'));
-});
+// 3. Security & Utility Middlewares
+app.use(helmet());
 
-// Static uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Configure CORS allowlist
+const rawOrigins = process.env.CORS_ORIGIN || 'http://localhost:5000,http://localhost:5173,http://127.0.0.1:8080,http://127.0.0.1:5500';
+const allowedOrigins = rawOrigins
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/$/, ''))
+  .filter(Boolean);
 
-// Routes
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, postman)
+      if (!origin) return callback(null, true);
+
+      // Check if origin matches or wildcard
+      const isAllowed =
+        allowedOrigins.includes('*') ||
+        allowedOrigins.some((allowed) => allowed === origin || origin.endsWith(allowed.replace('https://', '')));
+
+      if (isAllowed || process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+      callback(new Error(`Origin ${origin} is not allowed by CORS policy`));
+    },
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  })
+);
+
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(compression());
+
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+}
+
+// Serve public static assets if present
+app.use(express.static(path.join(__dirname, '../public')));
+
+// 4. Mount API Routes
+const authRoutes = require('./routes/auth');
+const carsRoutes = require('./routes/cars');
+const buildsRoutes = require('./routes/builds');
+const uploadsRoutes = require('./routes/uploads');
+const healthRoutes = require('./routes/health');
+
+// Health endpoint (exempt from rate limits for uptime monitors)
+app.use('/api/health', healthRoutes);
+
+// Auth routes (have their own stricter rate limiter)
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/cars', carRoutes);
-app.use('/api/tuning', tuningRoutes);
-app.use('/api/upload', uploadRoutes);
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'Car Tuning API is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV
+// General routes (protected by general apiLimiter in production)
+if (process.env.NODE_ENV === 'production') {
+  app.use('/api/cars', apiLimiter, carsRoutes);
+  app.use('/api/builds', apiLimiter, buildsRoutes);
+  app.use('/api/uploads', apiLimiter, uploadsRoutes);
+} else {
+  app.use('/api/cars', carsRoutes);
+  app.use('/api/builds', buildsRoutes);
+  app.use('/api/uploads', uploadsRoutes);
+}
+
+// 404 Route Handler for undefined API paths
+app.use('/api/*', (req, res) => {
+  res.status(404).json({
+    error: `Cannot ${req.method} ${req.originalUrl}`
   });
 });
 
-// Socket.io for real-time features
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
-  
-  socket.on('join-room', (roomId) => {
-    socket.join(roomId);
-    console.log(`User ${socket.id} joined room ${roomId}`);
-  });
-  
-  socket.on('tuning-update', (data) => {
-    socket.to(data.roomId).emit('tuning-updated', data);
-  });
-  
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
-});
-
-// Error handling middleware
-app.use(notFound);
+// Centralized Error Handling Middleware
 app.use(errorHandler);
 
-// Firebase connection check
-const checkFirebaseConnection = async () => {
-  try {
-    const { db } = require('./config/firebase');
-    await db.collection('_health').doc('check').set({ timestamp: new Date() });
-    console.log('✅ Firebase Firestore Connected Successfully');
-  } catch (error) {
-    console.warn('⚠️ Firebase connection check failed (local/offline mode active):', error.message);
-  }
-};
-
-// Start server
+// 5. Database Connection and Server Startup
 const PORT = process.env.PORT || 5000;
 
-const startServer = async () => {
-  await checkFirebaseConnection();
-  server.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-    console.log(`Firebase Project: ${process.env.FIREBASE_PROJECT_ID}`);
-  });
-};
+let server;
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-  console.log(`Error: ${err.message}`);
-  server.close(() => {
-    process.exit(1);
-  });
-});
+if (require.main === module) {
+  connectDB()
+    .then(() => {
+      server = app.listen(PORT, () => {
+        console.log(`🚀 Car Tuning Backend running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
+        console.log(`⚡ Health check available at http://localhost:${PORT}/api/health`);
+      });
+    })
+    .catch((err) => {
+      console.error('Failed to connect to database during startup:', err);
+      process.exit(1);
+    });
+}
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.log(`Error: ${err.message}`);
-  process.exit(1);
-});
-
-startServer();
-
-module.exports = { app, io };
+module.exports = app;

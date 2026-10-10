@@ -1,77 +1,66 @@
+/**
+ * Centralized Error Handling Middleware
+ */
 const errorHandler = (err, req, res, next) => {
-  let error = { ...err };
-  error.message = err.message;
+  let statusCode = err.statusCode || 500;
+  let message = err.message || 'Internal Server Error';
+  let details = err.details || [];
 
-  // Log error
-  console.error(err);
-
-  // Mongoose bad ObjectId
+  // Mongoose Bad ObjectId (CastError)
   if (err.name === 'CastError') {
-    const message = 'Resource not found';
-    error = { message, statusCode: 404 };
+    statusCode = 404;
+    message = `Resource not found with id of ${err.value}`;
   }
 
-  // Mongoose duplicate key
-  if (err.code === 11000) {
-    const field = Object.keys(err.keyValue)[0];
-    const message = `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`;
-    error = { message, statusCode: 400 };
-  }
-
-  // Mongoose validation error
+  // Mongoose Validation Error
   if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors).map(val => val.message).join(', ');
-    error = { message, statusCode: 400 };
+    statusCode = 400;
+    message = 'Validation Error';
+    details = Object.values(err.errors).map(val => ({
+      field: val.path,
+      message: val.message
+    }));
   }
 
-  // JWT errors
+  // Mongoose Duplicate Key Error (E11000)
+  if (err.code === 11000) {
+    statusCode = 409;
+    const field = Object.keys(err.keyValue || {})[0] || 'field';
+    message = `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`;
+  }
+
+  // JWT Errors
   if (err.name === 'JsonWebTokenError') {
-    const message = 'Invalid token';
-    error = { message, statusCode: 401 };
+    statusCode = 401;
+    message = 'Not authorized: Invalid token';
   }
 
   if (err.name === 'TokenExpiredError') {
-    const message = 'Token expired';
-    error = { message, statusCode: 401 };
+    statusCode = 401;
+    message = 'Not authorized: Token expired';
   }
 
-  // Firebase errors
-  if (err.code === 'auth/invalid-credential') {
-    const message = 'Invalid credentials';
-    error = { message, statusCode: 401 };
+  // Multer Errors
+  if (err.name === 'MulterError') {
+    statusCode = 400;
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      message = 'File size limit exceeded (max 5 MB allowed)';
+    } else {
+      message = `Upload error: ${err.message}`;
+    }
   }
 
-  if (err.code === 'auth/user-not-found') {
-    const message = 'User not found';
-    error = { message, statusCode: 404 };
+  const response = {
+    error: message,
+    details: details
+  };
+
+  // Only include stack trace in development
+  if (process.env.NODE_ENV !== 'production' && statusCode === 500) {
+    response.stack = err.stack;
   }
 
-  if (err.code === 'auth/email-already-exists') {
-    const message = 'Email already exists';
-    error = { message, statusCode: 400 };
-  }
-
-  if (err.code === 'permission-denied') {
-    const message = 'Permission denied';
-    error = { message, statusCode: 403 };
-  }
-
-  // File upload errors
-  if (err.code === 'LIMIT_FILE_SIZE') {
-    const message = 'File too large';
-    error = { message, statusCode: 400 };
-  }
-
-  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-    const message = 'Unexpected file field';
-    error = { message, statusCode: 400 };
-  }
-
-  res.status(error.statusCode || 500).json({
-    success: false,
-    message: error.message || 'Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  });
+  res.status(statusCode).json(response);
 };
 
 module.exports = errorHandler;
